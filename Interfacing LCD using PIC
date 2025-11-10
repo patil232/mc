@@ -1,0 +1,127 @@
+#include <p18f4550.h>
+
+#pragma config FOSC = HS      
+#pragma config WDT = OFF       
+#pragma config LVP = OFF       
+#pragma config PBADEN = OFF    
+
+#define LCD_DATA PORTD           
+#define en PORTEbits.RE2         
+#define rw PORTEbits.RE1         
+#define rs PORTEbits.RE0         
+
+void ADC_Init(void);
+unsigned int Get_ADC_Result(void);
+void Start_Conversion(void);
+void msdelay(unsigned int time);
+void init_LCD(void);
+void LCD_command(unsigned char cmd);
+void LCD_data(unsigned char data);
+void LCD_write_string(const char *str);
+
+void main(void)
+{
+    unsigned int adc_val;
+    unsigned char i, Thousands, Hundreds, Tens, Ones;
+
+    TRISD = 0x00;    
+    TRISE = 0x00;    
+    TRISAbits.TRISA1 = 1; // AN1 as input
+
+    ADC_Init();      
+    init_LCD();      
+
+    LCD_write_string("Analog Voltage:");
+    LCD_command(0xC0); 
+
+    while (1)
+    {
+        Start_Conversion();           
+        adc_val = Get_ADC_Result();   
+
+        LCD_command(0xC0); 
+        
+        i = adc_val / 1000;
+        Thousands = i + 0x30;
+        LCD_data(Thousands);
+
+        i = (adc_val % 1000) / 100;
+        Hundreds = i + 0x30;
+        LCD_data(Hundreds);
+
+        i = (adc_val % 100) / 10;
+        Tens = i + 0x30;
+        LCD_data(Tens);
+
+        i = adc_val % 10;
+        Ones = i + 0x30;
+        LCD_data(Ones);
+
+        msdelay(500);
+    }
+}
+
+void ADC_Init(void)
+{
+    ADCON1 = 0x0D;         // AN1 analog, others digital
+    ADCON2 = 0xA9;         // Right justified, 8TAD, Fosc/8
+    ADCON0 = 0x05;         // Select AN1 channel, ADC ON
+}
+
+void Start_Conversion(void)
+{
+    ADCON0bits.GO = 1;     
+}
+
+unsigned int Get_ADC_Result(void)
+{
+    while (ADCON0bits.GO);   // Wait until conversion complete
+    return ((ADRESH << 8) + ADRESL);
+}
+
+void msdelay(unsigned int time)
+{
+    unsigned int i, j;
+    for (i = 0; i < time; i++)
+        for (j = 0; j < 710; j++); 
+}
+
+void init_LCD(void)
+{
+    LCD_command(0x38); 
+    msdelay(2);
+    LCD_command(0x0C); 
+    msdelay(2);
+    LCD_command(0x01); 
+    msdelay(2);
+    LCD_command(0x80); 
+}
+
+void LCD_command(unsigned char cmd)
+{
+    LCD_DATA = cmd;
+    rs = 0;
+    rw = 0;
+    en = 1;
+    msdelay(2);
+    en = 0;
+}
+
+void LCD_data(unsigned char data)
+{
+    LCD_DATA = data;
+    rs = 1;
+    rw = 0;
+    en = 1;
+    msdelay(2);
+    en = 0;
+}
+
+void LCD_write_string(const char *str)
+{
+    while (*str)
+    {
+        LCD_data(*str++);
+        msdelay(2);
+    }
+}
