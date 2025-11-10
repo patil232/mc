@@ -46,7 +46,28 @@ Title: Interfacing DAC with 89C51
 	 	 } 
  } 
  
- 
+ #include <reg51.h>   // Header file for 8051 microcontroller
+
+     // Port P0 as DAC output
+
+void delay() {
+    int i, j;
+    for(i = 0; i < 100; i++)
+					for(j = 0; j < 100; j++);
+}
+
+void main() {
+    unsigned char sin_value[12] = {128,192,238,255,238,192,128,64,17,0,17,64};
+    unsigned char i;
+
+    while(1) {
+        for(i = 0; i < 12; i++) {
+            P0 = sin_value[i];
+            delay();   // slow down for observable waveform
+        }
+    }
+}
+
 #include <reg51.h>
 void delay(unsigned int ms) {
     unsigned int i,j;
