@@ -1,0 +1,35 @@
+#include <reg51.h>   // Header file for 8051 microcontroller
+void delay(unsigned int time) {
+    unsigned int i, j;
+    for(i = 0; i < time; i++) {
+        for(j = 0; j < 255; j++);  // Inner delay loop
+    }
+}
+void main() {
+    while(1) {
+        P1 = 0xFF;      // Turn ON all LEDs
+        delay(10);      // Delay similar to nested DJNZ loops
+
+        P1 = 0x00;      // Turn OFF all LEDs
+        delay(255);     // Delay similar to longer nested loop
+    }
+}
+#include <reg51.h> 
+void delay(void);
+void main(void) {
+ while(1) {
+ P1 = 0xFF; 
+ delay();
+ P1 = 0x00; 
+ delay();
+ }
+}
+void delay(void) {
+ unsigned char i, j;
+ unsigned int k;
+ for (i = 0; i < 10; i++) { 
+ for (j = 0; j < 255; j++) { 
+ for (k = 0; k < 255; k++); 
+ }
+ }
+}
